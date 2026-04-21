@@ -136,7 +136,7 @@ def main():
                         for m in st.session_state.messages[:-1]
                     ]
                     chat = client.chats.create(
-                        model="gemini-2.0-flash",
+                        model="gemini-1.5-flash",
                         config=types.GenerateContentConfig(
                             system_instruction=system_prompt,
                             max_output_tokens=1500,
