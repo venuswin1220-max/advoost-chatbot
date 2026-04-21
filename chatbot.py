@@ -1,8 +1,7 @@
 import streamlit as st
 import pdfplumber
 import openpyxl
-from google import genai
-from google.genai import types
+import anthropic
 import os
 from pathlib import Path
 
@@ -75,10 +74,10 @@ def main():
             st.success("API 키 연결됨")
         else:
             api_key = st.text_input(
-                "Gemini API Key",
+                "Anthropic API Key",
                 type="password",
-                placeholder="AIza...",
-                help="aistudio.google.com에서 발급받은 API 키를 입력하세요"
+                placeholder="sk-ant-...",
+                help="console.anthropic.com에서 발급받은 API 키를 입력하세요"
             )
 
         if st.button("대화 초기화"):
@@ -93,7 +92,7 @@ def main():
             st.markdown(f"- {f.name}")
 
     if not api_key:
-        st.info("왼쪽 사이드바에 **Gemini API Key**를 입력하면 시작됩니다.\n\n발급: [aistudio.google.com](https://aistudio.google.com) → Get API key")
+        st.info("왼쪽 사이드바에 **Anthropic API Key**를 입력하면 시작됩니다.\n\n발급: [console.anthropic.com](https://console.anthropic.com) → API Keys → Create Key")
         return
 
     with st.spinner("문서 로딩 중... (최초 1회)"):
@@ -127,26 +126,25 @@ def main():
         with st.chat_message("assistant"):
             with st.spinner("답변 생성 중..."):
                 try:
-                    client = genai.Client(api_key=api_key)
-                    history = [
-                        types.Content(
-                            role="user" if m["role"] == "user" else "model",
-                            parts=[types.Part(text=m["content"])]
-                        )
-                        for m in st.session_state.messages[:-1]
-                    ]
-                    chat = client.chats.create(
-                        model="gemini-1.5-flash",
-                        config=types.GenerateContentConfig(
-                            system_instruction=system_prompt,
-                            max_output_tokens=1500,
-                        ),
-                        history=history
+                    client = anthropic.Anthropic(api_key=api_key)
+                    response = client.messages.create(
+                        model="claude-haiku-4-5-20251001",
+                        max_tokens=1500,
+                        system=[{
+                            "type": "text",
+                            "text": system_prompt,
+                            "cache_control": {"type": "ephemeral"}
+                        }],
+                        messages=[
+                            {"role": m["role"], "content": m["content"]}
+                            for m in st.session_state.messages
+                        ]
                     )
-                    response = chat.send_message(user_input)
-                    answer = response.text
+                    answer = response.content[0].text
                     st.write(answer)
                     st.session_state.messages.append({"role": "assistant", "content": answer})
+                except anthropic.AuthenticationError:
+                    st.error("API 키가 올바르지 않습니다. 사이드바에서 다시 확인해 주세요.")
                 except Exception as e:
                     st.error(f"오류 발생: {e}")
 
