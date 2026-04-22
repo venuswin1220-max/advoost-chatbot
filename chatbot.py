@@ -51,9 +51,9 @@ def load_all_docs():
 
 def get_api_key():
     try:
-        return st.secrets["GEMINI_API_KEY"]
+        return st.secrets["ANTHROPIC_API_KEY"]
     except Exception:
-        return os.environ.get("GEMINI_API_KEY", "")
+        return os.environ.get("ANTHROPIC_API_KEY", "")
 
 
 def main():
