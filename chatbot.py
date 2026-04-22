@@ -81,6 +81,14 @@ def main():
                 help="aistudio.google.com에서 발급받은 API 키를 입력하세요"
             )
 
+        if st.button("사용 가능 모델 확인"):
+            try:
+                client = genai.Client(api_key=api_key, http_options={"api_version": "v1beta"})
+                models = [m.name for m in client.models.list()]
+                st.write(models)
+            except Exception as e:
+                st.error(f"조회 오류: {e}")
+
         if st.button("대화 초기화"):
             st.session_state.messages = []
             st.rerun()
