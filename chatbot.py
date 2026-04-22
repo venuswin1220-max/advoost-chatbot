@@ -1,7 +1,8 @@
 import streamlit as st
 import pdfplumber
 import openpyxl
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 import os
 from pathlib import Path
 
@@ -126,18 +127,23 @@ def main():
         with st.chat_message("assistant"):
             with st.spinner("답변 생성 중..."):
                 try:
-                    genai.configure(api_key=api_key)
-                    model = genai.GenerativeModel(
-                        model_name="gemini-2.0-flash",
-                        system_instruction=system_prompt
+                    client = genai.Client(api_key=api_key)
+
+                    history = [
+                        types.Content(
+                            role="user" if m["role"] == "user" else "model",
+                            parts=[types.Part(text=m["content"])]
+                        )
+                        for m in st.session_state.messages[:-1]
+                    ]
+
+                    chat = client.chats.create(
+                        model="gemini-1.5-flash",
+                        config=types.GenerateContentConfig(
+                            system_instruction=system_prompt,
+                        ),
+                        history=history,
                     )
-
-                    history = []
-                    for m in st.session_state.messages[:-1]:
-                        role = "user" if m["role"] == "user" else "model"
-                        history.append({"role": role, "parts": [m["content"]]})
-
-                    chat = model.start_chat(history=history)
                     response = chat.send_message(user_input)
                     answer = response.text
                     st.write(answer)
