@@ -132,7 +132,11 @@ def main():
                         http_options={"api_version": "v1"},
                     )
 
-                    history = [
+                    system_seed = [
+                        types.Content(role="user", parts=[types.Part(text=system_prompt)]),
+                        types.Content(role="model", parts=[types.Part(text="네, 이해했습니다. ADVoost Screen 전문 안내 도우미로서 정확하게 답변드리겠습니다.")]),
+                    ]
+                    conv_history = [
                         types.Content(
                             role="user" if m["role"] == "user" else "model",
                             parts=[types.Part(text=m["content"])]
@@ -142,10 +146,7 @@ def main():
 
                     chat = client.chats.create(
                         model="gemini-1.5-flash",
-                        config=types.GenerateContentConfig(
-                            system_instruction=system_prompt,
-                        ),
-                        history=history,
+                        history=system_seed + conv_history,
                     )
                     response = chat.send_message(user_input)
                     answer = response.text
