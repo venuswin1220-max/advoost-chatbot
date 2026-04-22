@@ -127,7 +127,10 @@ def main():
         with st.chat_message("assistant"):
             with st.spinner("답변 생성 중..."):
                 try:
-                    client = genai.Client(api_key=api_key)
+                    client = genai.Client(
+                        api_key=api_key,
+                        http_options={"api_version": "v1"},
+                    )
 
                     history = [
                         types.Content(
